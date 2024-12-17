@@ -42,3 +42,19 @@ class Film(db.Model):
             'film_length': self.film_length,
             'rating': self.rating
         }
+
+class Actor(db.Model):
+    __tablename__ = 'actors'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    birth_date = db.Column(db.Date)
+    is_active = db.Column(db.Boolean, default=False)
+
+    def __init__(self, name, birth_date, is_active):
+        self.name = name
+        self.birth_date = birth_date
+        self.is_active = is_active
+
+    def __repr__(self):
+        return f"Actor ({self.name}, {self.birth_date}, {self.is_active})"

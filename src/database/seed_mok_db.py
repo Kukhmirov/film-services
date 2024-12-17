@@ -1,7 +1,6 @@
 import datetime
-import uuid
-from src import db, app  # Импорты вашего приложения и базы данных
-from src.models import Film  # Импорт модели Film
+from src import db, app
+from src.database.models import Film, Actor
 
 # Моковые данные для заполнения базы данных
 mock_data = [
@@ -87,21 +86,46 @@ mock_data = [
     }
 ]
 
+mock_actors = [
+    {'name': 'Robert Downey Jr.', 'birth_date': datetime.date(1965, 4, 4), 'is_active': True},
+    {'name': 'Scarlett Johansson', 'birth_date': datetime.date(1984, 11, 22), 'is_active': True},
+    {'name': 'Leonardo DiCaprio', 'birth_date': datetime.date(1974, 11, 11), 'is_active': True},
+    {'name': 'Meryl Streep', 'birth_date': datetime.date(1949, 6, 22), 'is_active': False},
+    {'name': 'Tom Hanks', 'birth_date': datetime.date(1956, 7, 9), 'is_active': True},
+]
+
 def seed_database():
     """Создание базы данных и добавление тестовых данных."""
     with app.app_context():
         print("Добавляем моковые данные...")
+
+        # Добавляем актёров
+        for actor_data in mock_actors:
+            actors = Actor(
+                name=actor_data['name'],
+                birth_date=actor_data['birth_date'],
+                is_active=actor_data['is_active']
+            )
+            db.session.add(actors)
+        try:
+            db.session.commit()
+            print("Актёры успешно добавлены.")
+        except Exception as e:
+            print(f"Ошибка при добавлении актёров: {e}")
+            db.session.rollback()
+
+        # Добавляем фильмы
         for film_data in mock_data:
             film = Film(
                 title=film_data['title'],
                 release_date=film_data['release_date'],
                 description=film_data['description'],
                 distributed_by=film_data['distributed_by'],
-                film_length=film_data['film_length']
+                film_length=film_data['film_length'],
+                rating = film_data['rating'],
             )
-            film.rating = film_data['rating']
-            db.session.add(film)  # Добавляем каждый фильм в сессию
 
+            db.session.add(film)  # Добавляем каждый фильм в сессию
         try:
             db.session.commit()  # Фиксируем изменения
             print("База данных успешно заполнена!")
