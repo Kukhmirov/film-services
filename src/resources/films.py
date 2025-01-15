@@ -1,19 +1,29 @@
 from flask import request
 
 from flask_restful import Resource
+from sqlalchemy.orm import joinedload
+
 from src import db
-from src.database.models import Film
+from src.database.models import Film, Actor
+
 from marshmallow import ValidationError
-from src.schemas import FilmSchema
+
+from src.database.queries import start
+from src.database.seed_mok_db import seed_database
+from src.schemas.films import FilmSchema
 
 
 class FilmListApi(Resource):
     film_schema = FilmSchema()
 
     def get(self, uuid=None):
+        seed_database()
         if not uuid:
-            films = db.session.query(Film).all()
+            films = db.session.query(Film).options(
+                joinedload(Film.actors)
+            ).all()
             films_dict = self.film_schema.dump(films, many=True)
+            start()
             return films_dict
         film = db.session.query(Film).filter_by(uuid=uuid).first()
         if not film:
@@ -21,33 +31,15 @@ class FilmListApi(Resource):
         return self.film_schema.dump(film)
 
     def post(self):
-        # Без использования схемы marshmallow
-        # film_json = request.get_json()
-        # if not film_json:
-        #     return {"message": "Нет обьекта"}, 400
-        # try:
-        #     film = Film(
-        #         title=film_json['title'],
-        #         release_date=datetime.strptime(film_json['release_date'], '%Y-%m-%d'),
-        #         distributed_by=film_json['distributed_by'],
-        #         description=film_json.get('description', ''),
-        #         film_length=film_json.get('film_length', ''),
-        #         rating=film_json.get('rating', ''),
-        #     )
-        #     db.session.add(film)
-        #     db.session.commit()
-        # except (ValueError, KeyError) as e:
-        #     return {"message": "Не правильные данные"}, 400
-        # return {'message': 'Фильм создан'}, 201
-
         try:
-            film = self.film_schema.load(request.get_json(), session=db.session)
+            print(request.json)
+            film = self.film_schema.load(request.json, session=db.session)
+            print(film)
         except ValidationError as e:
             return {'message': str(e)}, 400
         db.session.add(film)
         db.session.commit()
         return self.film_schema.dump(film), 201
-
 
     def put(self, uuid):
         # Без использования схемы marshmallow
