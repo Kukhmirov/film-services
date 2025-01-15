@@ -77,6 +77,14 @@ mock_data = [
         'rating': 8.8
     },
     {
+        'title': 'The Lord of the Rings: The Two Towers',
+        'release_date': datetime.date(2002, 12, 18),
+        'description': 'Gandalf, Aragorn, Legolas, and Gimli fight Saruman\'s armies, while Frodo and Sam continue their journey to Mount Doom. Swords and magic lead the battle for the fate of Middle-earth.',
+        'distributed_by': 'New Line Cinema',
+        'film_length': 179.0,
+        'rating': 8.7
+    },
+    {
         'title': 'The Social Network',
         'release_date': datetime.date(2010, 10, 1),
         'description': 'The story of how Harvard student Mark Zuckerberg created Facebook, the social networking site that would become a global phenomenon.',
@@ -92,21 +100,54 @@ mock_actors = [
     {'name': 'Leonardo DiCaprio', 'birth_date': datetime.date(1974, 11, 11), 'is_active': True},
     {'name': 'Meryl Streep', 'birth_date': datetime.date(1949, 6, 22), 'is_active': False},
     {'name': 'Tom Hanks', 'birth_date': datetime.date(1956, 7, 9), 'is_active': True},
+    {'name': 'Morgan Freeman', 'birth_date': datetime.date(1937, 6, 1), 'is_active': True},
+    {'name': 'Tim Robbins', 'birth_date': datetime.date(1958, 10, 16), 'is_active': True},
+    {'name': 'Marlon Brando', 'birth_date': datetime.date(1924, 4, 3), 'is_active': False},
+    {'name': 'Al Pacino', 'birth_date': datetime.date(1940, 4, 25), 'is_active': True},
+    {'name': 'Christian Bale', 'birth_date': datetime.date(1974, 1, 30), 'is_active': True},
+    {'name': 'Heath Ledger', 'birth_date': datetime.date(1979, 4, 4), 'is_active': False},
+    {'name': 'John Travolta', 'birth_date': datetime.date(1954, 2, 18), 'is_active': True},
+    {'name': 'Uma Thurman', 'birth_date': datetime.date(1970, 4, 29), 'is_active': True},
+    {'name': 'Keanu Reeves', 'birth_date': datetime.date(1964, 9, 2), 'is_active': True},
+    {'name': 'Brad Pitt', 'birth_date': datetime.date(1963, 12, 18), 'is_active': True},
+    {'name': 'Edward Norton', 'birth_date': datetime.date(1969, 8, 18), 'is_active': True},
+    {'name': 'Elijah Wood', 'birth_date': datetime.date(1981, 1, 28), 'is_active': True},
+    {'name': 'Ian McKellen', 'birth_date': datetime.date(1939, 5, 25), 'is_active': True},
+    {'name': 'Jesse Eisenberg', 'birth_date': datetime.date(1983, 10, 5), 'is_active': True},
+    {'name': 'Andrew Garfield', 'birth_date': datetime.date(1983, 8, 20), 'is_active': True}
 ]
+
+film_actor_mapping = {
+    'The Shawshank Redemption': ['Morgan Freeman', 'Tim Robbins'],
+    'The Godfather': ['Marlon Brando', 'Al Pacino'],
+    'The Dark Knight': ['Christian Bale', 'Heath Ledger'],
+    'Pulp Fiction': ['John Travolta', 'Uma Thurman'],
+    'Forrest Gump': ['Tom Hanks'],
+    'Inception': ['Leonardo DiCaprio'],
+    'The Matrix': ['Keanu Reeves'],
+    'Fight Club': ['Brad Pitt', 'Edward Norton'],
+    'The Lord of the Rings: The Fellowship of the Ring': ['Elijah Wood', 'Ian McKellen'],
+    'The Social Network': ['Jesse Eisenberg', 'Andrew Garfield']
+}
 
 def seed_database():
     """Создание базы данных и добавление тестовых данных."""
     with app.app_context():
         print("Добавляем моковые данные...")
 
-        # Добавляем актёров
+        actor_objects = {}
+        # Добавляем актёров, если они ещё не добавлены
         for actor_data in mock_actors:
-            actors = Actor(
-                name=actor_data['name'],
-                birth_date=actor_data['birth_date'],
-                is_active=actor_data['is_active']
-            )
-            db.session.add(actors)
+            actor = Actor.query.filter_by(name=actor_data['name']).first()
+            if not actor:  # если актёр не существует в базе
+                actor = Actor(
+                    name=actor_data['name'],
+                    birth_date=actor_data['birth_date'],
+                    is_active=actor_data['is_active']
+                )
+                db.session.add(actor)
+                print(f"Добавлен актёр: {actor_data['name']}")
+            actor_objects[actor_data['name']] = actor
         try:
             db.session.commit()
             print("Актёры успешно добавлены.")
@@ -114,18 +155,29 @@ def seed_database():
             print(f"Ошибка при добавлении актёров: {e}")
             db.session.rollback()
 
-        # Добавляем фильмы
+        # Добавляем фильмы, если они ещё не добавлены
         for film_data in mock_data:
-            film = Film(
-                title=film_data['title'],
-                release_date=film_data['release_date'],
-                description=film_data['description'],
-                distributed_by=film_data['distributed_by'],
-                film_length=film_data['film_length'],
-                rating = film_data['rating'],
-            )
+            film = Film.query.filter_by(title=film_data['title']).first()
+            if not film:  # если фильм не существует в базе
+                film = Film(
+                    title=film_data['title'],
+                    release_date=film_data['release_date'],
+                    description=film_data['description'],
+                    distributed_by=film_data['distributed_by'],
+                    film_length=film_data['film_length'],
+                    rating=film_data['rating'],
+                    actors=[]
+                )
+                print(f"Добавлен фильм: {film_data['title']}")
 
-            db.session.add(film)  # Добавляем каждый фильм в сессию
+                # Связываем актёров с фильмом
+                actor_names = film_actor_mapping.get(film_data['title'], [])
+                for name in actor_names:
+                    actor = actor_objects.get(name)
+                    if actor and actor not in film.actors:  # Проверяем, что актёр не добавлен
+                        film.actors.append(actor)
+
+                db.session.add(film)  # Добавляем фильм в сессию
         try:
             db.session.commit()  # Фиксируем изменения
             print("База данных успешно заполнена!")

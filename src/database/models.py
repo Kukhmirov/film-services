@@ -1,6 +1,12 @@
 import uuid
+
 from src import db
 
+moves_actors = db.Table(
+    'moves_actors',
+    db.Column('actor_id', db.Integer, db.ForeignKey('actors.id'), primary_key=True),
+    db.Column('film_id', db.Integer, db.ForeignKey('films.id'), primary_key=True)
+)
 
 class Film(db.Model):
     __tablename__ = 'films'
@@ -13,8 +19,10 @@ class Film(db.Model):
     distributed_by = db.Column(db.String(120), nullable=False)
     film_length = db.Column(db.Float)
     rating = db.Column(db.Float)
+    actors = db.relationship('Actor', secondary=moves_actors, lazy='subquery', backref=db.backref('films', lazy=True))
+    test_migration = db.Column(db.Boolean, default=False)
 
-    def __init__(self, title, release_date, description, distributed_by, film_length, rating):
+    def __init__(self, title, release_date, description, distributed_by, film_length, rating, actors=None):
         self.title = title
         self.release_date = release_date
         self.uuid = str(uuid.uuid4())
@@ -22,26 +30,18 @@ class Film(db.Model):
         self.distributed_by = distributed_by
         self.film_length = film_length
         self.rating = rating
+        if not actors:
+            self.actors = []
+        else:
+            self.actors = actors
 
     def __repr__(self):
-        return f"Film ({self.title}, {self.release_date}, {self.uuid}, {self.description}, {self.distributed_by}, {self.film_length}, {self.rating})"
+        return f"Film ({self.title}, {self.release_date}, {self.uuid}, {self.description}, {self.distributed_by}, {self.film_length}, {self.rating}, {self.actors})"
 
     @property
     def release_date_str(self):
         """Преобразуем дату в строку при обращении к этому свойству"""
         return self.release_date.strftime('%Y-%m-%d') if self.release_date else None
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'title': self.title,
-            'release_date': self.release_date_str,
-            'uuid': self.uuid,
-            'description': self.description,
-            'distributed_by': self.distributed_by,
-            'film_length': self.film_length,
-            'rating': self.rating
-        }
 
 class Actor(db.Model):
     __tablename__ = 'actors'
