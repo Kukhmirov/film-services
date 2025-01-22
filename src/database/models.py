@@ -1,5 +1,7 @@
 import uuid
 
+from werkzeug.security import generate_password_hash
+
 from src import db
 
 moves_actors = db.Table(
@@ -58,3 +60,23 @@ class Actor(db.Model):
 
     def __repr__(self):
         return f"Actor ({self.name}, {self.birth_date}, {self.is_active})"
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    uuid = db.Column(db.String(36), unique=True)
+
+    def __init__(self, user_name, email, password, is_admin=False):
+        self.user_name = user_name
+        self.email = email
+        self.password = generate_password_hash(password)
+        self.is_admin = is_admin
+        self.uuid = str(uuid.uuid4())
+
+    def __repr__(self):
+        return f"User ({self.user_name}, {self.email}, {self.password}, {self.is_admin})"
