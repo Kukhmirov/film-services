@@ -10,12 +10,14 @@ from marshmallow import ValidationError
 
 from src.database.queries import start
 from src.database.seed_mok_db import seed_database
+from src.resources.auth import token_required
 from src.schemas.films import FilmSchema
 
 
 class FilmListApi(Resource):
     film_schema = FilmSchema()
 
+    @token_required
     def get(self, uuid=None):
         seed_database()
         if not uuid:
