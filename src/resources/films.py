@@ -14,6 +14,8 @@ from src.services.film_service import FilmService
 
 
 class FilmListApi(Resource):
+
+    
     film_schema = FilmSchema()
 
     def get(self, uuid=None):

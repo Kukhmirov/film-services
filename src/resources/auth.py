@@ -17,6 +17,7 @@ from src.services.user_service import UserService
 class AuthRegister(Resource):
     user_schema = UserSchema()
 
+
     def post(self):
         try:
             user = self.user_schema.load(request.json, session=db.session)
@@ -31,6 +32,8 @@ class AuthRegister(Resource):
         return self.user_schema.dump(user), 201
 
 class AuthLogin(Resource):
+
+
     def get(self):
         auth = request.authorization
         print(request)
