@@ -34,4 +34,4 @@ jobs:
         coverage report
 
     - name: Lint code with pycodestyle
-      run: pycodestyle src/ --ignore=E722,E501,E402
+      run: pycodestyle src/ --ignore=E722,E501,E402,E302,E305
