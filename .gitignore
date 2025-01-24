@@ -16,5 +16,4 @@ venv/
 *.log
 
 # Other ignored files
-*.db
 *.sqlite3
