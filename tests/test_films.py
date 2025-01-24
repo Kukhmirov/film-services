@@ -23,7 +23,7 @@ class TestFilms:
 
         assert response.status_code == http.HTTPStatus.OK
 
-    @patch('src.services.film_service.FilmService.fetch_all_films', autospec=True)
+    @patch('src.services.film_service.FilmService.fetch_all_films')
     def test_get_films_mock_db(self, mock_get_films_mock):
         click = app.test_client()
         response = click.get('/films')
