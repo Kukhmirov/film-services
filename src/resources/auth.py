@@ -11,6 +11,7 @@ from werkzeug.security import check_password_hash
 from src import db, app
 from src.database.models import User
 from src.schemas.users import UserSchema
+from src.services.user_service import UserService
 
 
 class AuthRegister(Resource):
@@ -35,7 +36,7 @@ class AuthLogin(Resource):
         print(request)
         if not auth:
             return {'message': 'Authorization required'}, 401, {'WWW-Authenticate': 'Basic realm="Authentication Required"'}
-        user = db.session.query(User).filter_by(user_name=auth.get('username', '')).first()
+        user = UserService.get_user_by_name(db.session, auth.get('username', ''))
         print(user)
         if not user or not check_password_hash(user.password, auth.get('password', '')):
             return '', 401, {'WWW-Authenticate': 'Basic realm="Authentication Required"'}
@@ -58,7 +59,7 @@ def token_required(func):
             uuid = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['user_id']
         except (KeyError, jwt.ExpiredSignatureError):
             return '', 401, {'WWW-Authenticate': 'Basic realm="Authentication Required"'}
-        user = db.session.query(User).filter_by(uuid=uuid).first()
+        user = UserService.get_user_by_uuid(db.session, uuid)
         if not user:
             return '', 401, {'WWW-Authenticate': 'Basic realm="Authentication Required"'}
         return func(self, *args, **kwargs)
