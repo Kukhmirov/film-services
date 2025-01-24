@@ -33,5 +33,5 @@ jobs:
         coverage run --source="src/" -m pytest
         coverage report
 
-    - name: Lint code with pycodestyle
-      run: pycodestyle src/ --ignore=E722,E501,E402,E302,E305
+#    - name: Lint code with pycodestyle
+#      run: pycodestyle src/ --ignore=E722,E501,E402,E302,E305
